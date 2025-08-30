@@ -1,0 +1,48 @@
+body {
+    font-family: Arial, sans-serif;
+    max-width: 600px;
+    margin: 50px auto;
+    padding: 20px;
+    text-align: center;
+}
+
+#streamButton {
+    padding: 15px 30px;
+    font-size: 18px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#streamButton.inactive {
+    background-color: #4CAF50;
+    color: white;
+}
+
+#streamButton.active {
+    background-color: #f44336;
+    color: white;
+}
+
+#status {
+    margin-top: 20px;
+    padding: 10px;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+.status-disconnected {
+    background-color: #ffebee;
+    color: #c62828;
+}
+
+.status-connected {
+    background-color: #e8f5e8;
+    color: #2e7d32;
+}
+
+.status-streaming {
+    background-color: #fff3e0;
+    color: #ef6c00;
+}
