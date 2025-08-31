@@ -6,25 +6,6 @@ body {
     text-align: center;
 }
 
-#streamButton {
-    padding: 15px 30px;
-    font-size: 18px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-#streamButton.inactive {
-    background-color: #4CAF50;
-    color: white;
-}
-
-#streamButton.active {
-    background-color: #f44336;
-    color: white;
-}
-
 #status {
     margin-top: 20px;
     padding: 10px;
@@ -45,4 +26,47 @@ body {
 .status-streaming {
     background-color: #fff3e0;
     color: #ef6c00;
+}
+
+.status-vad-active {
+    background-color: #e3f2fd;
+    color: #1976d2;
+}
+
+#activity-indicator {
+    margin-top: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100px;
+}
+
+#activity-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #ddd;
+    transition: all 0.2s ease;
+}
+
+#activity-circle.listening {
+    background-color: #2196f3;
+    animation: pulse 2s infinite;
+}
+
+#activity-circle.streaming {
+    background-color: #ff5722;
+    transform: scale(1.5);
+    animation: stream-pulse 0.3s infinite alternate;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 1; }
+    100% { opacity: 0.6; }
+}
+
+@keyframes stream-pulse {
+    0% { transform: scale(1.3); }
+    100% { transform: scale(1.7); }
 }

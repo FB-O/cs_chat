@@ -8,14 +8,18 @@
 </head>
 <body>
     <h1>Audio Streaming Client</h1>
-    <p>Click the button to start/stop audio streaming</p>
-    
-    <button id="streamButton" class="inactive">Start Streaming</button>
+    <p>oice activity detection automatically controls streaming</p>
     
     <div id="status" class="status-disconnected">
         Disconnected
     </div>
     
+    <div id="activity-indicator">
+        <div id="activity-circle"></div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.14.0/dist/ort.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@ricky0123/vad-web@0.0.22/dist/bundle.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

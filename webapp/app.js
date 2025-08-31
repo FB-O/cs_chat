@@ -6,16 +6,96 @@ let mediaRecorder = null;
 let audioStream = null;
 let isStreaming = false;
 
+// VAD-specific variables
+let vadModel = null;
+let vadAudioContext = null;
+let vadAnalyser = null;
+let vadProcessor = null;
+let vadEnabled = false;
+
 // DOM elements
-const streamButton = document.getElementById('streamButton');
 const statusDiv = document.getElementById('status');
 
 // Initialize the application
 function init() {
     console.log('Initializing audio streaming client...');
-    streamButton.addEventListener('click', toggleStreaming);
     connectWebSocket();
+    initVAD();
 }
+
+// Initialize VAD
+async function initVAD() {
+    try {
+        console.log('Initializing Silero VAD...');
+        
+        // Wait for vad global to be available
+        if (typeof vad === 'undefined') {
+            console.error('VAD library not loaded');
+            updateStatus('VAD Library Error', 'disconnected');
+            return;
+        }
+        
+        vadModel = await vad.MicVAD.new({
+            onSpeechStart: () => {
+                console.log('Speech detected - starting stream');
+                if (!isStreaming) {
+                    startStreaming();
+                }
+            },
+            onSpeechEnd: (audio) => {
+                console.log('Speech ended - stopping stream');
+                if (isStreaming) {
+                    stopStreaming();
+                }
+            }
+        });
+        
+        console.log('VAD model loaded successfully');
+        updateStatus('VAD Ready - Auto-detecting speech...', 'connected');
+        startVAD();
+        
+    } catch (error) {
+        console.error('Error initializing VAD:', error);
+        updateStatus('VAD Error', 'disconnected');
+    }
+}
+
+// Start VAD monitoring
+async function startVAD() {
+    if (!vadModel) {
+        console.error('VAD model not loaded');
+        return;
+    }
+    
+    try {
+        console.log('Starting VAD monitoring...');
+        await vadModel.start();
+        vadEnabled = true;
+        updateStatus('Listening for speech...', 'vad-active');
+        
+    } catch (error) {
+        console.error('Error starting VAD:', error);
+        updateStatus('VAD Start Error', 'disconnected');
+    }
+}
+
+// Stop VAD monitoring
+function stopVAD() {
+    if (vadModel) {
+        console.log('Stopping VAD monitoring...');
+        vadModel.pause();
+        vadEnabled = false;
+        
+        // Stop any active streaming
+        if (isStreaming) {
+            stopStreaming();
+        }
+        
+        updateVADButton();
+        updateStatus('VAD Stopped', 'connected');
+    }
+}
+
 
 // WebSocket connection management
 function connectWebSocket() {
@@ -70,14 +150,16 @@ async function startStreaming() {
     }
     
     try {
-        // Get audio stream from microphone
-        audioStream = await navigator.mediaDevices.getUserMedia({
-            audio: {
-                echoCancellation: true,
-                noiseSuppression: true,
-                sampleRate: 44100
-            }
-        });
+        // Get audio stream from microphone (only if we don't have one)
+        if (!audioStream) {
+            audioStream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    sampleRate: 44100
+                }
+            });
+        }
         
         console.log('Audio stream obtained successfully');
         
@@ -102,8 +184,7 @@ async function startStreaming() {
         mediaRecorder.start(100);
         
         isStreaming = true;
-        updateButton();
-        updateStatus('Streaming...', 'streaming');
+        updateStatus('Streaming (VAD Active)...', 'streaming');
         console.log('Audio streaming started');
         
     } catch (error) {
@@ -121,7 +202,8 @@ function stopStreaming() {
         console.log('MediaRecorder stopped');
     }
     
-    if (audioStream) {
+    // Don't stop audioStream if VAD is active (it needs continuous access)
+    if (!vadEnabled && audioStream) {
         audioStream.getTracks().forEach(track => {
             track.stop();
             console.log('Audio track stopped');
@@ -130,26 +212,24 @@ function stopStreaming() {
     }
     
     isStreaming = false;
-    updateButton();
-    updateStatus('Connected', 'connected');
+    updateStatus('Listening for speech...', 'vad-active');
     console.log('Audio streaming stopped');
-}
-
-// Update button appearance and text
-function updateButton() {
-    if (isStreaming) {
-        streamButton.textContent = 'Stop Streaming';
-        streamButton.className = 'active';
-    } else {
-        streamButton.textContent = 'Start Streaming';
-        streamButton.className = 'inactive';
-    }
 }
 
 // Update status display
 function updateStatus(message, type) {
     statusDiv.textContent = message;
     statusDiv.className = `status-${type}`;
+    
+    // Update activity circle
+    const circle = document.getElementById('activity-circle');
+    circle.className = '';
+    
+    if (type === 'vad-active' || type === 'connected') {
+        circle.className = 'listening';
+    } else if (type === 'streaming') {
+        circle.className = 'streaming';
+    }
 }
 
 // Start the application when page loads
