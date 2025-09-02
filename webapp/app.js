@@ -200,6 +200,12 @@ function stopStreaming() {
     if (mediaRecorder && mediaRecorder.state !== 'inactive') {
         mediaRecorder.stop();
         console.log('MediaRecorder stopped');
+
+        // Send audio end signal to server
+        if (websocket && websocket.readyState === WebSocket.OPEN) {
+            websocket.send(JSON.stringify({ type: 'audio_end'}));
+            console.log("Audio end signal sent");
+        }
     }
     
     // Don't stop audioStream if VAD is active (it needs continuous access)
